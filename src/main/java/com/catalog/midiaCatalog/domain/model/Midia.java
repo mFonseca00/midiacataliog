@@ -1,19 +1,27 @@
 package com.catalog.midiaCatalog.domain.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.catalog.midiaCatalog.domain.model.enums.Midiatype;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "midias")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -24,11 +32,15 @@ public class Midia {
     private Long id;
 
     @NotBlank
+    @Column(nullable = false)
     private String title;
 
-    @NotNull
+    @NotBlank
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Midiatype type;
 
+    @Column(name = "release_year")
     private Integer releaseYear;
 
     private String director;
@@ -37,7 +49,14 @@ public class Midia {
 
     private String genre;
 
+    @Column(name = "poster_image_url")
     private String poseterImageUrl;
 
-    private List<Actor> actors;
+    @ManyToMany
+    @JoinTable(
+        name = "midia_actors",
+        joinColumns = @JoinColumn(name = "midia_id"),
+        inverseJoinColumns = @JoinColumn(name = "actor_id")
+    )
+    private List<Actor> actors = new ArrayList<>();
 }
