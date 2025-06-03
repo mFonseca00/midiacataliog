@@ -46,6 +46,8 @@ public class Evaluation {
     @Max(value = 5, message = "Rating must be at most 5 stars")
     private Integer rating;
 
+    
+    @Column(length = 1000)
     private String comment;
 
     @DateTimeFormat(pattern = "dd/MM/yyyy")

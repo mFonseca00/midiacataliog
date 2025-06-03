@@ -46,11 +46,12 @@ public class Midia {
 
     private String director;
 
+    @Column(length = 5000)
     private String synopsis;
 
     private String genre;
 
-    @Column(name = "poster_image_url")
+    @Column(length = 1000, name = "poster_image_url")
     private String poseterImageUrl;
 
     @ManyToMany
