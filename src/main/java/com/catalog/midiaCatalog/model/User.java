@@ -1,4 +1,4 @@
-package com.catalog.midiaCatalog.model;
+package com.catalog.midiacatalog.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

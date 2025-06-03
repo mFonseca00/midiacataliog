@@ -1,9 +1,9 @@
-package com.catalog.midiaCatalog.model;
+package com.catalog.midiacatalog.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.catalog.midiaCatalog.model.enums.Midiatype;
+import com.catalog.midiacatalog.model.enums.Midiatype;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

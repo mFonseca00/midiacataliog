@@ -1,4 +1,4 @@
-package com.catalog.midiaCatalog.service;
+package com.catalog.midiacatalog.service;
 
 import org.springframework.stereotype.Service;
 

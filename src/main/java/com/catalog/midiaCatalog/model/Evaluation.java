@@ -1,4 +1,4 @@
-package com.catalog.midiaCatalog.model;
+package com.catalog.midiacatalog.model;
 
 import java.time.LocalDateTime;
 
