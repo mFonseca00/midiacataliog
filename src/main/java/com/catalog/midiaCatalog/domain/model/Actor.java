@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
@@ -25,7 +26,7 @@ import lombok.NoArgsConstructor;
 public class Actor {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
@@ -33,7 +34,7 @@ public class Actor {
     private String name;
 
     @DateTimeFormat(pattern = "dd/MM/yyyy")
-    @Column(name = "birth_date", nullable = false)
+    @Column(name = "birth_date")
     private Date birthDate;
 
     @ManyToMany(mappedBy = "actors")

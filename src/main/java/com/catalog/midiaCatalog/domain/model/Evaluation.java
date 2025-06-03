@@ -1,12 +1,13 @@
 package com.catalog.midiaCatalog.domain.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -26,7 +27,7 @@ import lombok.NoArgsConstructor;
 public class Evaluation {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank
@@ -49,5 +50,5 @@ public class Evaluation {
 
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Column(name = "evaluation_date")
-    private Date evaluationDate;
+    private LocalDateTime evaluationDate;
 }
