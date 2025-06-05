@@ -1,8 +1,7 @@
 package com.catalog.midiaCatalog.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -16,10 +15,9 @@ import org.mockito.MockitoAnnotations;
 
 import com.catalog.midiacatalog.dto.ActorDTO;
 import com.catalog.midiacatalog.dto.ActorRegistratioDTO;
+import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
 import com.catalog.midiacatalog.model.Actor;
-import com.catalog.midiacatalog.model.Midia;
-import com.catalog.midiacatalog.model.enums.Midiatype;
 import com.catalog.midiacatalog.repository.ActorRepository;
 import com.catalog.midiacatalog.service.ActorService;
 
@@ -31,45 +29,26 @@ public class ActorServiceTest {
     @InjectMocks
     private ActorService actorService;
 
-    private ActorDTO actor1;
-    private ActorDTO actor2;
-    private ActorDTO actor3;
+    private Actor actor1;
+    private Actor actor2;
+    private Actor actor3;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        actor1 = new ActorDTO();
-        actor2 = new ActorDTO();
-        actor3 = new ActorDTO();
+        actor1 = new Actor();
+        actor2 = new Actor();
+        actor3 = new Actor();
+        actor1.setId(1L);
         actor1.setName("Jhon");
         actor1.setBirthDate(LocalDate.of(2000, 1, 1));
+        actor1.setId(2L);
         actor2.setName("Peter");
         actor2.setBirthDate(LocalDate.of(1999, 2, 10));
+        actor1.setId(3L);
         actor3.setName("Paula");
         actor3.setBirthDate(LocalDate.of(1978, 3, 5));
-
-        List<Midia> midias = new ArrayList<>();
-        Midia midia = new Midia();
-
-        midia.setTitle("Exemple");
-        midia.setType(Midiatype.MOVIE);
-        midias.add(midia);
-
-        actor1.setMidias(midias);
-
-        midia.setTitle("Exemple 2");
-        midia.setType(Midiatype.SERIES);
-        midias.add(midia);
-
-        actor1.setMidias(midias);
-        actor2.setMidias(midias);
-
-        midia.setTitle("Exemple 3");
-        midia.setType(Midiatype.MOVIE);
-        midias.add(midia);
-
-        actor3.setMidias(midias);
 
     }
 
@@ -96,7 +75,7 @@ public class ActorServiceTest {
                 actorService.register(actor);
             });
 
-        assertEquals("Actor name must be informed", exception.getMessage());
+        assertEquals("Actor name must be informed.", exception.getMessage());
     }
 
     @Test
@@ -109,12 +88,45 @@ public class ActorServiceTest {
                 actorService.register(actor);
             });
 
-        assertEquals("Birth date cannot be in the future", exception.getMessage());
+        assertEquals("Birth date cannot be in the future.", exception.getMessage());
     }
 
     @Test
     void testRemoveSuccess(){
-        
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+
+        ActorDTO removed = actorService.remove(actor1.getId());
+
+        assertNotNull(removed);
+        assertEquals(actor1.getId(), removed.getId());
+        assertEquals(actor1.getName(), removed.getName());
+        assertEquals(actor1.getBirthDate(), removed.getBirthDate());
+        assertEquals(actor1.getMidias(),removed.getMidias());
+        verify(actorRepository, times(1)).deleteById(actor1.getId());
+    }
+
+    @Test
+    void testRemoveFailNullId(){
+        Exception exception = assertThrows(DataValidationException.class,
+            () -> {
+                actorService.remove(null);
+            });
+
+        assertEquals("Actor id must be informed.", exception.getMessage());
+    }
+
+    @Test
+    void testRemoveFailNotFound() {
+        when(actorRepository.findById(5L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(DataNotFoundException.class,
+            () -> {
+                actorService.remove(5L);
+            });
+
+        assertEquals("Actor not found.", exception.getMessage());
+        verify(actorRepository, times(1)).findById(5L);
+        verify(actorRepository, never()).deleteById(any());
     }
     
 }
