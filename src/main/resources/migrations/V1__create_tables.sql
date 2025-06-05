@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR NOT NULL,
     password VARCHAR,
     email VARCHAR NOT NULL UNIQUE,
+    enabled BOOLEAN,
     PRIMARY KEY (id)
 );
 
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS midias (
     synopsis VARCHAR,
     genre VARCHAR,
     poster_image_url VARCHAR,
+    enabled BOOLEAN,
     PRIMARY KEY (id)
 );
 
@@ -22,6 +24,7 @@ CREATE TABLE IF NOT EXISTS actors (
     id BIGINT NOT NULL AUTO_INCREMENT,
     name VARCHAR NOT NULL,
     birth_date DATE,
+    enabled BOOLEAN,
     PRIMARY KEY (id)
 );
 
@@ -32,6 +35,7 @@ CREATE TABLE IF NOT EXISTS evaluations (
     rating INT,
     comment VARCHAR,
     evaluation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    enabled BOOLEAN,
     PRIMARY KEY (id),
     FOREIGN KEY (midia_id) REFERENCES midias(id),
     FOREIGN KEY (user_id) REFERENCES users(id)

@@ -53,4 +53,6 @@ public class Evaluation {
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Column(name = "evaluation_date")
     private LocalDateTime evaluationDate;
+
+    private boolean enabled = true;
 }

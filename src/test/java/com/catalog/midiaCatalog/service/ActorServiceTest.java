@@ -1,7 +1,7 @@
 package com.catalog.midiaCatalog.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.catalog.midiacatalog.dto.ActorDTO;
+import com.catalog.midiacatalog.dto.ActorRegistratioDTO;
 import com.catalog.midiacatalog.exception.DataValidationException;
 import com.catalog.midiacatalog.model.Actor;
 import com.catalog.midiacatalog.model.Midia;
@@ -42,11 +43,11 @@ public class ActorServiceTest {
         actor2 = new ActorDTO();
         actor3 = new ActorDTO();
         actor1.setName("Jhon");
-        actor1.setBirthDate(new GregorianCalendar(2000, GregorianCalendar.JANUARY, 1).getTime());
+        actor1.setBirthDate(LocalDate.of(2000, 1, 1));
         actor2.setName("Peter");
-        actor1.setBirthDate(new GregorianCalendar(1999, GregorianCalendar.FEBRUARY, 10).getTime());
+        actor2.setBirthDate(LocalDate.of(1999, 2, 10));
         actor3.setName("Paula");
-        actor1.setBirthDate(new GregorianCalendar(1978, GregorianCalendar.JANUARY, 5).getTime());
+        actor3.setBirthDate(LocalDate.of(1978, 3, 5));
 
         List<Midia> midias = new ArrayList<>();
         Midia midia = new Midia();
@@ -74,7 +75,10 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterActorSuccess() {
-        ActorDTO saved = actorService.registerActor(actor1);
+        ActorRegistratioDTO actor = new ActorRegistratioDTO();
+        actor.setName(actor1.getName());
+        actor.setBirthDate(actor1.getBirthDate());
+        ActorRegistratioDTO saved = actorService.register(actor);
 
         assertNotNull(saved);
         assertEquals(actor1.getName(), saved.getName());
@@ -84,12 +88,12 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterFailActorUnNamed() {
-        ActorDTO actor = new ActorDTO();
-        actor.setBirthDate(new GregorianCalendar(2000, GregorianCalendar.JANUARY, 1).getTime());
+        ActorRegistratioDTO actor = new ActorRegistratioDTO();
+        actor.setBirthDate(LocalDate.of(2000, 1, 1));
 
         Exception exception = assertThrows(DataValidationException.class,
             () -> {
-                actorService.registerActor(actor);
+                actorService.register(actor);
             });
 
         assertEquals("Actor name must be informed", exception.getMessage());
@@ -97,16 +101,20 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterFailFutureDate(){
-        ActorDTO actor = new ActorDTO();
+        ActorRegistratioDTO actor = new ActorRegistratioDTO();
         actor.setName("Joana");
-        actor.setBirthDate(new GregorianCalendar(2026, GregorianCalendar.JANUARY, 1).getTime());
+        actor.setBirthDate(LocalDate.of(3000, 1, 1));
         Exception exception = assertThrows(DataValidationException.class,
             () -> {
-                actorService.registerActor(actor);
+                actorService.register(actor);
             });
 
         assertEquals("Birth date cannot be in the future", exception.getMessage());
     }
 
+    @Test
+    void testRemoveSuccess(){
+        
+    }
     
 }

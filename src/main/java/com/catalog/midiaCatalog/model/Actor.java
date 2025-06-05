@@ -1,10 +1,10 @@
 package com.catalog.midiacatalog.model;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,10 +33,12 @@ public class Actor {
     @Column(nullable = false)
     private String name;
 
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     @Column(name = "birth_date")
-    private Date birthDate;
+    private LocalDate birthDate;
 
     @ManyToMany(mappedBy = "actors")
     private List<Midia> midias = new ArrayList<>();
+
+    private boolean enabled = true;
 }

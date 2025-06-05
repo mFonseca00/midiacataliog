@@ -61,4 +61,6 @@ public class Midia {
         inverseJoinColumns = @JoinColumn(name = "actor_id")
     )
     private List<Actor> actors = new ArrayList<>();
+
+    private boolean enabled = true;
 }
