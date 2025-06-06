@@ -27,7 +27,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class Midia {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -63,4 +62,17 @@ public class Midia {
     private List<Actor> actors = new ArrayList<>();
 
     private boolean enabled = true;
+
+        
+    public Midia(String title, Midiatype type, Integer releaseYear, String  director, String synopsis, String genre,
+            String poseterImageUrl, List<Actor> actors) {
+        this.title = title;
+        this.type = type;
+        this.releaseYear = releaseYear;
+        this.director = director;
+        this.synopsis = synopsis;
+        this.genre = genre;
+        this.poseterImageUrl = poseterImageUrl;
+        this.actors = actors;
+    }
 }

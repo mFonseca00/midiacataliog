@@ -1,10 +1,7 @@
-package com.catalog.midiacatalog.dto;
+package com.catalog.midiacatalog.dto.Actor;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
-import com.catalog.midiacatalog.model.Midia;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.validation.constraints.NotBlank;
@@ -16,17 +13,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ActorDTO {
-    private Long id;
+public class ActorRegistratioDTO {
     @NotBlank
     private String name;
     @Past
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate birthDate;
-    private List<Midia> midias = new ArrayList<>();
 
-    public ActorDTO(String name, LocalDate birth){
-        this.name = name;
-        this.birthDate = birth;
-    }
 }
