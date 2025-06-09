@@ -8,7 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
-import com.catalog.midiacatalog.dto.Actor.ActorRegistratioDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorResponseDTO;
 import com.catalog.midiacatalog.dto.Midia.MidiaDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
@@ -26,7 +27,7 @@ public class ActorService {
     @Autowired
     private MidiaRepository midiaRepository;
 
-    public ActorRegistratioDTO register(ActorRegistratioDTO actorDTO) {
+    public ActorResponseDTO register(ActorRegistrationDTO actorDTO) {
         if(actorDTO.getName() == null || actorDTO.getName() == "")
             throw new DataValidationException("Actor name must be informed.");
         
@@ -39,10 +40,10 @@ public class ActorService {
         actor.setEnabled(true);
         actorRepository.save(actor);
 
-        return new ActorRegistratioDTO(actor.getName(),actor.getBirthDate());
+        return new ActorResponseDTO(actor.getId(),actor.getName(),actor.getBirthDate());
     }
 
-    public ActorDTO remove(Long id) {
+    public ActorResponseDTO remove(Long id) {
         if(id == null)
             throw new DataValidationException("Actor id must be informed.");
         
@@ -54,11 +55,7 @@ public class ActorService {
         Actor removed = actor.get();
         actorRepository.deleteById(id);;
 
-        return new ActorDTO(
-            removed.getId(),
-            removed.getName(),
-            removed.getBirthDate(),
-            removed.getMidias());
+        return new ActorResponseDTO(removed.getId(),removed.getName(),removed.getBirthDate());
     }
 
     public ActorDTO getActor(Long id) {
@@ -167,7 +164,6 @@ public class ActorService {
 
         Actor actor = actorFound.get();
         List<Midia> midias = actor.getMidias();
-        
         if(midias.isEmpty()){
             throw new DataNotFoundException("No midias found for this actor.");
         }

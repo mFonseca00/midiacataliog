@@ -16,7 +16,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
-import com.catalog.midiacatalog.dto.Actor.ActorRegistratioDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorResponseDTO;
 import com.catalog.midiacatalog.dto.Midia.MidiaDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
@@ -118,10 +119,10 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterActorSuccess() {
-        ActorRegistratioDTO actor = new ActorRegistratioDTO();
+        ActorRegistrationDTO actor = new ActorRegistrationDTO();
         actor.setName(actor1.getName());
         actor.setBirthDate(actor1.getBirthDate());
-        ActorRegistratioDTO saved = actorService.register(actor);
+        ActorResponseDTO saved = actorService.register(actor);
 
         assertNotNull(saved);
         assertEquals(actor1.getName(), saved.getName());
@@ -131,7 +132,7 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterFailActorUnNamed() {
-        ActorRegistratioDTO actor = new ActorRegistratioDTO();
+        ActorRegistrationDTO actor = new ActorRegistrationDTO();
         actor.setBirthDate(LocalDate.of(2000, 1, 1));
 
         Exception exception = assertThrows(DataValidationException.class,
@@ -144,7 +145,7 @@ public class ActorServiceTest {
 
     @Test
     void testRegisterFailFutureDate(){
-        ActorRegistratioDTO actor = new ActorRegistratioDTO();
+        ActorRegistrationDTO actor = new ActorRegistrationDTO();
         actor.setName("Joana");
         actor.setBirthDate(LocalDate.of(3000, 1, 1));
         Exception exception = assertThrows(DataValidationException.class,
@@ -159,13 +160,12 @@ public class ActorServiceTest {
     void testRemoveSuccess(){
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
 
-        ActorDTO removed = actorService.remove(actor1.getId());
+        ActorResponseDTO removed = actorService.remove(actor1.getId());
 
         assertNotNull(removed);
         assertEquals(actor1.getId(), removed.getId());
         assertEquals(actor1.getName(), removed.getName());
         assertEquals(actor1.getBirthDate(), removed.getBirthDate());
-        assertEquals(actor1.getMidias(),removed.getMidias());
         verify(actorRepository, times(1)).deleteById(actor1.getId());
     }
 
