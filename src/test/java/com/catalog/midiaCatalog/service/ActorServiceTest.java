@@ -322,8 +322,8 @@ public class ActorServiceTest {
 
     @Test
     void removeMidiaSuccess(){
+        actor1.setMidias(midias);
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
-        when(midiaRepository.findById(midia1.getId())).thenReturn(Optional.of(midia1));
 
         MidiaDTO removed = actorService.removeMidia(actor1.getId(),midia1.getId());
 
@@ -336,7 +336,6 @@ public class ActorServiceTest {
         assertEquals(midia1.getPoseterImageUrl(),removed.getPoseterImageUrl());
         assertEquals(midia1.getSynopsis(),removed.getSynopsis());        
         assertEquals(midia1.getType(),removed.getType());        
-        verify(midiaRepository, times(1)).findById(midia1.getId());
         verify(actorRepository, times(1)).save(actor1);
     }
 
@@ -348,6 +347,7 @@ public class ActorServiceTest {
             });
 
         assertEquals("Actor id must be informed.", exception.getMessage());
+        verify(actorRepository, never()).save(any());
     }
 
     @Test
@@ -362,6 +362,7 @@ public class ActorServiceTest {
 
         assertEquals("Actor not found.", exception.getMessage());
         verify(actorRepository, times(1)).findById(actorId);
+        verify(actorRepository, never()).save(any());
     }
 
     @Test
@@ -372,24 +373,70 @@ public class ActorServiceTest {
             });
 
         assertEquals("Midia id must be informed.", exception.getMessage());
+        verify(actorRepository, never()).save(any());
     }
 
     @Test
     void testRemoveMidiaFailMidiaNotFound(){
         Long midiaId = 1L;
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
-        when(midiaRepository.findById(midiaId)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(DataNotFoundException.class,
             () -> actorService.removeMidia(actor1.getId(), midiaId));
 
-        assertEquals("Midia not found.", exception.getMessage());
-        verify(midiaRepository, times(1)).findById(midiaId);
+        assertEquals("No midias found for this actor.", exception.getMessage());
+        verify(actorRepository, times(1)).findById(midiaId);
         verify(actorRepository, never()).save(any());
     }
 
     @Test
-    void testGetActorMidias(){
-        //ToDo
+    void testGetAllActorMidiasSuccess(){
+        actor1.setMidias(midias);
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+
+        List<MidiaDTO> found = actorService.getAllActorMidias(actor1.getId());
+
+        assertNotNull(found);
+        assertEquals(3, found.size());
+        assertEquals(midia1.getTitle(), found.get(0).getTitle());
+        assertEquals(midia2.getTitle(), found.get(1).getTitle());
+        assertEquals(midia3.getTitle(), found.get(2).getTitle());
+        verify(actorRepository, times(1)).findById(actor1.getId());
+    }
+
+    @Test
+    void testGetAllActorMidiasFailActorNotFound(){
+        Long actorId = 1L;
+        when(actorRepository.findById(actorId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(DataNotFoundException.class,
+            () -> {
+                actorService.getAllActorMidias(actorId);
+            });
+
+        assertEquals("Actor not found.", exception.getMessage());
+        verify(actorRepository, times(1)).findById(actorId);
+    }
+
+    @Test
+    void testGetAllActorMidiasFailActorNullId(){
+        Exception exception = assertThrows(DataValidationException.class,
+            () -> {
+                actorService.getAllActorMidias(null);
+            });
+
+        assertEquals("Actor id must be informed.", exception.getMessage());
+    }
+
+    @Test
+    void testGetAllActorMidiasFailEmptyList(){
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+
+        Exception exception = assertThrows(DataNotFoundException.class,
+            () -> {
+                actorService.getAllActorMidias(actor1.getId());
+            });
+
+        assertEquals("No midias found for this actor.", exception.getMessage());
     }
 }

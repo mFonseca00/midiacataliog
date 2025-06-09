@@ -121,29 +121,59 @@ public class ActorService {
     }
 
     public MidiaDTO removeMidia(Long actorId, Long midiaId) {
+        if (actorId == null)
+            throw new DataValidationException("Actor id must be informed.");
+
+        if (midiaId == null)
+            throw new DataValidationException("Midia id must be informed.");
+
+        Optional<Actor> actorFound = actorRepository.findById(actorId);
+
+        if (actorFound.isEmpty())
+            throw new DataNotFoundException("Actor not found.");
+
+        Actor actor = actorFound.get();
+        List<Midia> actorMidias = actor.getMidias();
+
+        Midia midiaToRemove = actorMidias.stream()
+            .filter(midia -> midia.getId().equals(midiaId))
+            .findFirst()
+            .orElseThrow(() -> new DataNotFoundException("No midias found for this actor."));
+
+        actorMidias.remove(midiaToRemove);
+        actorRepository.save(actor);
+
+        return new MidiaDTO(
+            midiaToRemove.getId(),
+            midiaToRemove.getTitle(),
+            midiaToRemove.getType(),
+            midiaToRemove.getReleaseYear(),
+            midiaToRemove.getDirector(),
+            midiaToRemove.getSynopsis(),
+            midiaToRemove.getGenre(),
+            midiaToRemove.getPoseterImageUrl(),
+            midiaToRemove.getActors()
+        );
+    }
+
+    public List<MidiaDTO> getAllActorMidias(Long actorId) {
         if(actorId == null)
             throw new DataValidationException("Actor id must be informed.");
-        
-        if(midiaId == null)
-            throw new DataValidationException("Midia id must be informed.");
 
         Optional<Actor> actorFound = actorRepository.findById(actorId);
 
         if(actorFound.isEmpty())
             throw new DataNotFoundException("Actor not found.");
 
-        Optional<Midia> midiaFound = midiaRepository.findById(midiaId);
-        
-        if(midiaFound.isEmpty())
-            throw new DataNotFoundException("Midia not found.");
-
         Actor actor = actorFound.get();
-        Midia midia = midiaFound.get();
-        List<Midia> actorMidias = actor.getMidias();
-        actorMidias.remove(midia);
-        actorRepository.save(actor);
+        List<Midia> midias = actor.getMidias();
+        
+        if(midias.isEmpty()){
+            throw new DataNotFoundException("No midias found for this actor.");
+        }
 
-        return new MidiaDTO(
+        return midias.stream()
+        .map(midia -> new MidiaDTO(
             midia.getId(),
             midia.getTitle(),
             midia.getType(),
@@ -152,9 +182,8 @@ public class ActorService {
             midia.getSynopsis(),
             midia.getGenre(),
             midia.getPoseterImageUrl(),
-            midia.getActors());
+            midia.getActors()
+        ))
+        .collect(Collectors.toList());
     }
-
-
-
 }
