@@ -2,6 +2,7 @@ package com.catalog.midiaCatalog.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +30,6 @@ import com.catalog.midiacatalog.repository.MidiaRepository;
 import com.catalog.midiacatalog.service.ActorService;
 
 public class ActorServiceTest {
-
     @Mock
     private ActorRepository actorRepository;
 
@@ -41,80 +41,34 @@ public class ActorServiceTest {
 
     private Actor actor1;
     private Actor actor2;
-    private Actor actor3;
     private Midia midia1;
     private Midia midia2;
-    private Midia midia3;
-    private List<Actor> actors;
-    private List<Midia> midias;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         actor1 = new Actor();
-        actor1.setName("Jhon");
-        actor1.setBirthDate(LocalDate.of(2000, 1, 1));
         actor1.setId(1L);
+        actor1.setName("John");
+        actor1.setBirthDate(LocalDate.of(2000, 1, 1));
+        actor1.setEnabled(true);
 
         actor2 = new Actor();
-        actor2.setName("Peter");
-        actor2.setBirthDate(LocalDate.of(1999, 2, 10));
         actor2.setId(2L);
+        actor2.setName("Mary");
+        actor2.setBirthDate(LocalDate.of(1995, 6, 15));
+        actor2.setEnabled(true);
 
-        actor3 = new Actor();
-        actor3.setName("Paula");
-        actor3.setBirthDate(LocalDate.of(1978, 3, 5));
-        actor3.setId(3L);
-        
-
-        actors = new ArrayList<>();
-        actors.add(actor1);
-        actors.add(actor2);
-        actors.add(actor3);
-
-        midia1 = new Midia(
-            "Title 1",
-            Midiatype.MOVIE,
-            2024,
-            "Director 1",
-            "synopses 1",
-            "Horror",
-            "image1",
-            actors
-        );
+        midia1 = new Midia();
         midia1.setId(1L);
+        midia1.setTitle("Movie 1");
+        midia1.setType(Midiatype.MOVIE);
 
-        midia2 = new Midia(
-            "Title 2",
-            Midiatype.SERIES,
-            2025,
-            "Director 1",
-            "synopses 2",
-            "Horror",
-            "image2",
-            actors
-        );
+        midia2 = new Midia();
         midia2.setId(2L);
-
-        
-        midia3 = new Midia(
-            "Title 3",
-            Midiatype.SERIES,
-            2021,
-            "Director 2",
-            "synopses 3",
-            "Action",
-            "image3",
-            actors
-        );
-        midia3.setId(3L);
-
-        midias = new ArrayList<>();
-        midias.add(midia1);
-        midias.add(midia2);
-        midias.add(midia3);
-        
+        midia2.setTitle("Series 1");
+        midia2.setType(Midiatype.SERIES);
     }
 
     @Test
@@ -235,14 +189,13 @@ public class ActorServiceTest {
     @Test
     void testGetAllActorsSuccess(){
         
-        when(actorRepository.findAll()).thenReturn(actors);
+        when(actorRepository.findAll()).thenReturn(Arrays.asList(actor1, actor2));
 
         List<ActorDTO> found = actorService.getAllActors();
         assertNotNull(found);
-        assertEquals(3, found.size());
+        assertEquals(2, found.size());
         assertEquals(actor1.getName(), found.get(0).getName());
         assertEquals(actor2.getName(), found.get(1).getName());
-        assertEquals(actor3.getName(), found.get(2).getName());
         verify(actorRepository, times(1)).findAll();
 
     }
@@ -321,21 +274,25 @@ public class ActorServiceTest {
     }
 
     @Test
-    void removeMidiaSuccess(){
-        actor1.setMidias(midias);
+    void removeMidiaSuccess() {
+        List<Midia> midiaList = new ArrayList<>();
+        midiaList.add(midia1);
+        midiaList.add(midia2);
+        
+        actor1.setMidias(midiaList);
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
 
-        MidiaDTO removed = actorService.removeMidia(actor1.getId(),midia1.getId());
+        MidiaDTO removed = actorService.removeMidia(actor1.getId(), midia1.getId());
 
         assertNotNull(removed);
-        assertEquals(midia1.getId(),removed.getId());
-        assertEquals(midia1.getTitle(),removed.getTitle());
-        assertEquals(midia1.getActors(),removed.getActors());
-        assertEquals(midia1.getDirector(),removed.getDirector());
-        assertEquals(midia1.getGenre(),removed.getGenre());
-        assertEquals(midia1.getPoseterImageUrl(),removed.getPoseterImageUrl());
-        assertEquals(midia1.getSynopsis(),removed.getSynopsis());        
-        assertEquals(midia1.getType(),removed.getType());        
+        assertEquals(midia1.getId(), removed.getId());
+        assertEquals(midia1.getTitle(), removed.getTitle());
+        assertEquals(midia1.getActors(), removed.getActors());
+        assertEquals(midia1.getDirector(), removed.getDirector());
+        assertEquals(midia1.getGenre(), removed.getGenre());
+        assertEquals(midia1.getPoseterImageUrl(), removed.getPoseterImageUrl());
+        assertEquals(midia1.getSynopsis(), removed.getSynopsis());        
+        assertEquals(midia1.getType(), removed.getType());        
         verify(actorRepository, times(1)).save(actor1);
     }
 
@@ -390,17 +347,20 @@ public class ActorServiceTest {
     }
 
     @Test
-    void testGetAllActorMidiasSuccess(){
-        actor1.setMidias(midias);
+    void testGetAllActorMidiasSuccess() {
+        List<Midia> midiaList = new ArrayList<>();
+        midiaList.add(midia1);
+        midiaList.add(midia2);
+        
+        actor1.setMidias(midiaList);
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
 
         List<MidiaDTO> found = actorService.getAllActorMidias(actor1.getId());
 
         assertNotNull(found);
-        assertEquals(3, found.size());
+        assertEquals(2, found.size());
         assertEquals(midia1.getTitle(), found.get(0).getTitle());
         assertEquals(midia2.getTitle(), found.get(1).getTitle());
-        assertEquals(midia3.getTitle(), found.get(2).getTitle());
         verify(actorRepository, times(1)).findById(actor1.getId());
     }
 
@@ -438,5 +398,124 @@ public class ActorServiceTest {
             });
 
         assertEquals("No midias found for this actor.", exception.getMessage());
+    }
+
+    @Test
+    void testRegisterActorValidations() {
+        // Test null actor
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> actorService.register(null));
+        assertEquals("Actor data must be informed.", exception.getMessage());
+
+        // Test empty fields
+        ActorRegistrationDTO emptyActor = new ActorRegistrationDTO();
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.register(emptyActor));
+        assertTrue(exception.getErrors().contains("Actor name must be informed."));
+        assertTrue(exception.getErrors().contains("Birth date must be informed."));
+
+        // Test future date
+        ActorRegistrationDTO futureActor = new ActorRegistrationDTO();
+        futureActor.setName("Test");
+        futureActor.setBirthDate(LocalDate.now().plusYears(1));
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.register(futureActor));
+        assertTrue(exception.getErrors().contains("Birth date cannot be in the future."));
+    }
+
+    @Test
+    void testActorOperationsValidations() {
+        // Test get actor validations
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> actorService.getActor(null));
+        assertEquals("Actor id must be informed.", exception.getMessage());
+
+        // Test remove actor validations
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.remove(null));
+        assertEquals("Actor id must be informed.", exception.getMessage());
+
+        // Test get all actor midias validations
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.getAllActorMidias(null));
+        assertEquals("Actor id must be informed.", exception.getMessage());
+    }
+
+    @Test
+    void testMidiaOperationsValidations() {
+        // Add midia validations
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> actorService.addMidia(null, 1L));
+        assertEquals("Actor id must be informed.", exception.getMessage());
+
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.addMidia(1L, null));
+        assertEquals("Midia id must be informed.", exception.getMessage());
+
+        // Remove midia validations
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.removeMidia(null, 1L));
+        assertEquals("Actor id must be informed.", exception.getMessage());
+
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.removeMidia(1L, null));
+        assertEquals("Midia id must be informed.", exception.getMessage());
+    }
+
+    @Test
+    void testSuccessfulOperations() {
+        // Test register
+        ActorRegistrationDTO validActor = new ActorRegistrationDTO();
+        validActor.setName(actor1.getName());
+        validActor.setBirthDate(actor1.getBirthDate());
+        
+        when(actorRepository.save(any())).thenReturn(actor1);
+        ActorResponseDTO response = actorService.register(validActor);
+        assertEquals(actor1.getName(), response.getName());
+
+        // Test get actor
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+        ActorDTO found = actorService.getActor(actor1.getId());
+        assertEquals(actor1.getName(), found.getName());
+
+        // Test get all actors
+        when(actorRepository.findAll()).thenReturn(Arrays.asList(actor1, actor2));
+        List<ActorDTO> allActors = actorService.getAllActors();
+        assertEquals(2, allActors.size());
+
+        // Test add midia
+        when(midiaRepository.findById(midia1.getId())).thenReturn(Optional.of(midia1));
+        actor1.setMidias(new ArrayList<>());
+        String addResponse = actorService.addMidia(actor1.getId(), midia1.getId());
+        assertEquals("Midia added successfully", addResponse);
+
+        // Test remove midia
+        actor1.getMidias().add(midia1);
+        MidiaDTO removedMidia = actorService.removeMidia(actor1.getId(), midia1.getId());
+        assertEquals(midia1.getId(), removedMidia.getId());
+    }
+
+    @Test
+    void testNotFoundScenarios() {
+        when(actorRepository.findById(99L)).thenReturn(Optional.empty());
+        when(midiaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Test actor not found
+        assertThrows(DataNotFoundException.class,
+            () -> actorService.getActor(99L));
+
+        // Test midia not found
+        when(actorRepository.findById(1L)).thenReturn(Optional.of(actor1));
+        assertThrows(DataNotFoundException.class,
+            () -> actorService.addMidia(1L, 99L));
+
+        // Test empty lists
+        when(actorRepository.findAll()).thenReturn(new ArrayList<>());
+        assertThrows(DataNotFoundException.class,
+            () -> actorService.getAllActors());
+
+        actor1.setMidias(new ArrayList<>());
+        assertThrows(DataNotFoundException.class,
+            () -> actorService.getAllActorMidias(1L));
     }
 }

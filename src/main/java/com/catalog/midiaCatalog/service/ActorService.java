@@ -1,7 +1,7 @@
 package com.catalog.midiacatalog.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,6 @@ import com.catalog.midiacatalog.repository.MidiaRepository;
 
 @Service
 public class ActorService {
-
     @Autowired
     private ActorRepository actorRepository;
 
@@ -28,11 +27,21 @@ public class ActorService {
     private MidiaRepository midiaRepository;
 
     public ActorResponseDTO register(ActorRegistrationDTO actorDTO) {
-        if(actorDTO.getName() == null || actorDTO.getName() == "")
-            throw new DataValidationException("Actor name must be informed.");
+        if(actorDTO == null)
+            throw new DataValidationException("Actor data must be informed.");
+            
+        List<String> errors = new ArrayList<>();
         
-        if(actorDTO.getBirthDate().isAfter(java.time.LocalDate.now())) 
-            throw new DataValidationException("Birth date cannot be in the future.");
+        if(actorDTO.getName() == null || actorDTO.getName().trim().isEmpty())
+            errors.add("Actor name must be informed.");
+            
+        if(actorDTO.getBirthDate() == null)
+            errors.add("Birth date must be informed.");
+        else if(actorDTO.getBirthDate().isAfter(java.time.LocalDate.now()))
+            errors.add("Birth date cannot be in the future.");
+            
+        if(!errors.isEmpty())
+            throw new DataValidationException(errors);
         
         Actor actor = new Actor();
         actor.setName(actorDTO.getName());
@@ -40,46 +49,33 @@ public class ActorService {
         actor.setEnabled(true);
         actorRepository.save(actor);
 
-        return new ActorResponseDTO(actor.getId(),actor.getName(),actor.getBirthDate());
+        return new ActorResponseDTO(actor.getId(), actor.getName(), actor.getBirthDate());
     }
 
     public ActorResponseDTO remove(Long id) {
-        if(id == null)
-            throw new DataValidationException("Actor id must be informed.");
+        validateId(id, "Actor");
         
-        Optional<Actor> actor = actorRepository.findById(id);
+        Actor actor = findActorById(id);
+        actorRepository.deleteById(id);
 
-        if(actor.isEmpty())
-            throw new DataNotFoundException("Actor not found.");
-
-        Actor removed = actor.get();
-        actorRepository.deleteById(id);;
-
-        return new ActorResponseDTO(removed.getId(),removed.getName(),removed.getBirthDate());
+        return new ActorResponseDTO(actor.getId(), actor.getName(), actor.getBirthDate());
     }
 
     public ActorDTO getActor(Long id) {
-        if(id == null)
-            throw new DataValidationException("Actor id must be informed.");
-
-        Optional<Actor> actor = actorRepository.findById(id);
-
-        if(actor.isEmpty())
-            throw new DataNotFoundException("Actor not found.");
+        validateId(id, "Actor");
+        Actor actor = findActorById(id);
         
-        Actor found = actor.get();
-
         return new ActorDTO(
-            found.getId(),
-            found.getName(),
-            found.getBirthDate(),
-            found.getMidias());
+            actor.getId(),
+            actor.getName(),
+            actor.getBirthDate(),
+            actor.getMidias());
     }
 
     public List<ActorDTO> getAllActors() {
         List<Actor> actors = actorRepository.findAll();
         
-        if(actors == null || actors.isEmpty())
+        if(actors.isEmpty())
             throw new DataNotFoundException("No actors found in database.");
 
         return actors.stream()
@@ -92,25 +88,17 @@ public class ActorService {
     }
 
     public String addMidia(Long actorId, Long midiaId) {
-        if(actorId == null)
-            throw new DataValidationException("Actor id must be informed.");
+        validateIds(actorId, midiaId);
         
-        if(midiaId == null)
-            throw new DataValidationException("Midia id must be informed.");
+        Actor actor = findActorById(actorId);
+        Midia midia = findMidiaById(midiaId);
 
-        Optional<Actor> actorFound = actorRepository.findById(actorId);
-
-        if(actorFound.isEmpty())
-            throw new DataNotFoundException("Actor not found.");
-
-        Optional<Midia> midiaFound = midiaRepository.findById(midiaId);
-        
-        if(midiaFound.isEmpty())
-            throw new DataNotFoundException("Midia not found.");
-
-        Actor actor = actorFound.get();
-        Midia midia = midiaFound.get();
         List<Midia> actorMidias = actor.getMidias();
+        if(actorMidias == null) {
+            actorMidias = new ArrayList<>();
+            actor.setMidias(actorMidias);
+        }
+        
         actorMidias.add(midia);
         actorRepository.save(actor);
 
@@ -118,58 +106,62 @@ public class ActorService {
     }
 
     public MidiaDTO removeMidia(Long actorId, Long midiaId) {
-        if (actorId == null)
-            throw new DataValidationException("Actor id must be informed.");
-
-        if (midiaId == null)
-            throw new DataValidationException("Midia id must be informed.");
-
-        Optional<Actor> actorFound = actorRepository.findById(actorId);
-
-        if (actorFound.isEmpty())
-            throw new DataNotFoundException("Actor not found.");
-
-        Actor actor = actorFound.get();
+        validateIds(actorId, midiaId);
+        
+        Actor actor = findActorById(actorId);
         List<Midia> actorMidias = actor.getMidias();
+
+        if(actorMidias == null || actorMidias.isEmpty())
+            throw new DataNotFoundException("No midias found for this actor.");
 
         Midia midiaToRemove = actorMidias.stream()
             .filter(midia -> midia.getId().equals(midiaId))
             .findFirst()
-            .orElseThrow(() -> new DataNotFoundException("No midias found for this actor."));
+            .orElseThrow(() -> new DataNotFoundException("Midia not found for this actor."));
 
         actorMidias.remove(midiaToRemove);
         actorRepository.save(actor);
 
-        return new MidiaDTO(
-            midiaToRemove.getId(),
-            midiaToRemove.getTitle(),
-            midiaToRemove.getType(),
-            midiaToRemove.getReleaseYear(),
-            midiaToRemove.getDirector(),
-            midiaToRemove.getSynopsis(),
-            midiaToRemove.getGenre(),
-            midiaToRemove.getPoseterImageUrl(),
-            midiaToRemove.getActors()
-        );
+        return convertToMidiaDTO(midiaToRemove);
     }
 
     public List<MidiaDTO> getAllActorMidias(Long actorId) {
-        if(actorId == null)
-            throw new DataValidationException("Actor id must be informed.");
-
-        Optional<Actor> actorFound = actorRepository.findById(actorId);
-
-        if(actorFound.isEmpty())
-            throw new DataNotFoundException("Actor not found.");
-
-        Actor actor = actorFound.get();
+        validateId(actorId, "Actor");
+        
+        Actor actor = findActorById(actorId);
         List<Midia> midias = actor.getMidias();
-        if(midias.isEmpty()){
+        
+        if(midias == null || midias.isEmpty())
             throw new DataNotFoundException("No midias found for this actor.");
-        }
 
         return midias.stream()
-        .map(midia -> new MidiaDTO(
+            .map(this::convertToMidiaDTO)
+            .collect(Collectors.toList());
+    }
+
+    // Helper methods
+    private void validateId(Long id, String entity) {
+        if(id == null)
+            throw new DataValidationException(entity + " id must be informed.");
+    }
+
+    private void validateIds(Long actorId, Long midiaId) {
+        validateId(actorId, "Actor");
+        validateId(midiaId, "Midia");
+    }
+
+    private Actor findActorById(Long id) {
+        return actorRepository.findById(id)
+            .orElseThrow(() -> new DataNotFoundException("Actor not found."));
+    }
+
+    private Midia findMidiaById(Long id) {
+        return midiaRepository.findById(id)
+            .orElseThrow(() -> new DataNotFoundException("Midia not found."));
+    }
+
+    private MidiaDTO convertToMidiaDTO(Midia midia) {
+        return new MidiaDTO(
             midia.getId(),
             midia.getTitle(),
             midia.getType(),
@@ -179,7 +171,6 @@ public class ActorService {
             midia.getGenre(),
             midia.getPoseterImageUrl(),
             midia.getActors()
-        ))
-        .collect(Collectors.toList());
+        );
     }
 }
