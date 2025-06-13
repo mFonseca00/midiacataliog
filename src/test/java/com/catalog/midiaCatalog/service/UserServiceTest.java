@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserResponseDTO;
@@ -201,9 +202,71 @@ public class UserServiceTest {
     }
 
 
-    // login
+    @Test
+    void testLoginSuccess(){
+        UserLoginDTO userTry = new UserLoginDTO(
+                user1.getEmail(),
+                user1.getPassword()
+        );
+
+        when(userRepository.findByEmail(userTry.getEmail())).thenReturn(Optional.of(user1));
+
+        boolean logged = userService.login(userTry); // implement jwt
+
+        assertTrue(logged);
+        // add JWT vlidation
+        verify(userRepository, times(1)).findByEmail(user1.getEmail());
+    }
+
+    @Test
+    void testLoginValidation(){
+        // Null credentials
+        DataValidationException exception = assertThrows(DataValidationException.class, 
+            () -> userService.register(null));
+        assertEquals("User credentials must be informed.", exception.getMessage());
+
+        // Test all empty fields
+        exception = assertThrows(DataValidationException.class,
+            () -> userService.login(new UserLoginDTO("", "")));
+        assertTrue(exception.getErrors().contains("User email must be informed."));
+        assertTrue(exception.getErrors().contains("User password must be informed."));
+
+        // Test all null fields
+        exception = assertThrows(DataValidationException.class,
+            () -> userService.login(new UserLoginDTO(null, null)));
+        assertTrue(exception.getErrors().contains("User email must be informed."));
+        assertTrue(exception.getErrors().contains("User password must be informed."));
+        
+        // Test invalid formats
+        exception = assertThrows(DataValidationException.class,
+            () -> userService.login(new UserLoginDTO(
+                "invalid-email",  // Invalid email
+                "weak" // Weak password
+            )));
+        assertTrue(exception.getErrors().contains("Invalid email format."));
+        assertTrue(exception.getErrors().contains("Password must contain at least 8 characters, one uppercase letter, one number and one special character."));
+        verify(userRepository, never()).findByEmail(any(String.class));      
+
+    }
+
+    @Test
+    void testLoginWrongPassword(){
+        UserLoginDTO userTry = new UserLoginDTO(
+                user1.getEmail(),
+                "passworD123@"
+        );
+
+        when(userRepository.findByEmail(userTry.getEmail())).thenReturn(Optional.of(user1));
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> userService.login(userTry));
+        
+        assertEquals("Wrong password or email address. Please try again.", exception.getMessage());
+        verify(userRepository, times(1)).findByEmail(any(String.class));
+    }
 
     // getUser
+    
 
     // getAllUsers
 }

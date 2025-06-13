@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserResponseDTO;
@@ -83,7 +84,6 @@ public class UserService {
         return "Passowrd rested successfuly";
     }
           
-    // remove user
 
     public UserResponseDTO remove(Long id) {
         if(id == null)
@@ -98,7 +98,35 @@ public class UserService {
         return new UserResponseDTO(user.getId(),user.getName(),user.getEmail());
     }
        
-    // login
+    public boolean login(UserLoginDTO userLogin) {
+        if(userLogin == null)
+            throw new DataValidationException("User credentials must be informed.");
+        
+        List<String> errors = new ArrayList<>();
+        String validation;
+
+        validation = validateEmail(userLogin.getEmail());
+        if(validation != null)
+            errors.add(validation);
+        
+        validation = validatePassword(userLogin.getPassword());
+        if(validation != null)
+            errors.add(validation);
+
+        if(!errors.isEmpty())
+            throw new DataValidationException(errors); 
+
+        Optional<User> userFound = userRepository.findByEmail(userLogin.getEmail());
+        if(!userFound.isPresent())
+            throw new DataNotFoundException("No user found for this email.");
+
+        User user = userFound.get();
+
+        if(user.getPassword() != userLogin.getPassword())
+            throw new DataValidationException("Wrong password or email address. Please try again.");
+        
+        return true; // add JWT creation
+    }
 
     // getUser
 
