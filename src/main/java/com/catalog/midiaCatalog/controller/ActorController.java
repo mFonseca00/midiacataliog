@@ -44,7 +44,7 @@ public class ActorController {
         return actorService.getActor(id);
     }
     
-    @GetMapping("/list")
+    @GetMapping("/list") //TODO: adicionar paginação
     public List<ActorDTO> getAllActors(){
         return actorService.getAllActors();
     }
@@ -55,14 +55,16 @@ public class ActorController {
     }
 
 
-    @PutMapping("/{id}/remove-midia/{midiaId}")
+    @PutMapping("/{id}/remove-midia/{midiaId}") //TODO: mudar para delete
     public MidiaDTO removeMidia(@PathVariable Long id, @PathVariable Long midiaId) {
         return actorService.removeMidia(id, midiaId);
     }
 
-    @GetMapping("{id}/list-midias")
+    @GetMapping("{id}/list-midias") //TODO: adicionar paginação
     public List<MidiaDTO> getAllActorMidias(@PathVariable Long id){
         return actorService.getAllActorMidias(id);
     }
+
+    //TODO: updateActor
 
 }

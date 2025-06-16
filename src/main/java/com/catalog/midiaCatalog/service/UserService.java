@@ -125,12 +125,14 @@ public class UserService {
         if(user.getPassword() != userLogin.getPassword())
             throw new DataValidationException("Wrong password or email address. Please try again.");
         
-        return true; // add JWT creation
+        return true; //TODO: add JWT creation
     }
 
-    // getUser
+    //TODO: updateUser
 
-    // getAllUsers
+    //TODO: getUser
+
+    //TODO: getAllUsers
     
     
     // Helper methods
