@@ -19,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorResponseDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorUpdateDTO;
 import com.catalog.midiacatalog.dto.Midia.MidiaDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
@@ -108,6 +109,35 @@ public class ActorServiceTest {
             });
 
         assertEquals("Birth date cannot be in the future.", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateSuccess(){
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+
+        ActorUpdateDTO actorInfo = new ActorUpdateDTO(actor1.getName(), actor2.getBirthDate());
+
+        ActorResponseDTO updated = actorService.update(actor1.getId(), actorInfo);
+
+        assertNotNull(updated);
+        assertEquals(actor1.getId(), updated.getId());
+        assertEquals(actor1.getName(), updated.getName());
+        assertEquals(actor2.getBirthDate(), updated.getBirthDate());
+        verify(actorRepository, times(1)).save(any(Actor.class));
+    }
+
+    @Test
+    void testUpdateValidations(){
+        // Test null id
+
+        // Test empty id
+
+        // Test id not found
+
+        // Test all info fields empty
+
+        // Test birthdate future date
+
     }
 
     @Test
@@ -518,4 +548,5 @@ public class ActorServiceTest {
         assertThrows(DataNotFoundException.class,
             () -> actorService.getAllActorMidias(1L));
     }
+
 }

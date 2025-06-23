@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorResponseDTO;
+import com.catalog.midiacatalog.dto.Actor.ActorUpdateDTO;
 import com.catalog.midiacatalog.dto.Midia.MidiaDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
@@ -139,7 +140,10 @@ public class ActorService {
             .collect(Collectors.toList());
     }
 
-    //TODO: updateActor
+    public ActorResponseDTO update(Long id, ActorUpdateDTO actorInfo) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'update'");
+    }
 
     // Helper methods
     private void validateId(Long id, String entity) {
@@ -175,4 +179,5 @@ public class ActorService {
             midia.getActors()
         );
     }
+
 }

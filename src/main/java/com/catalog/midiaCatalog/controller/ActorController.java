@@ -55,7 +55,7 @@ public class ActorController {
     }
 
 
-    @PutMapping("/{id}/remove-midia/{midiaId}") //TODO: mudar para delete
+    @DeleteMapping("/{id}/remove-midia/{midiaId}")
     public MidiaDTO removeMidia(@PathVariable Long id, @PathVariable Long midiaId) {
         return actorService.removeMidia(id, midiaId);
     }
