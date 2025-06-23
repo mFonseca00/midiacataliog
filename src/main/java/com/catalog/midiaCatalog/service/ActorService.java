@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
@@ -62,6 +65,31 @@ public class ActorService {
         return new ActorResponseDTO(actor.getId(), actor.getName(), actor.getBirthDate());
     }
 
+    public ActorResponseDTO update(Long id, ActorUpdateDTO actorInfo) {
+        List<String> errors = new ArrayList<>();
+
+        if(id == null)
+            errors.add("Actor Id must be informed."); 
+        if(actorInfo == null)
+            errors.add("Actor Informations can't be null.");
+    
+        if(actorInfo != null && actorInfo.getBirthDate() != null &&
+           actorInfo.getBirthDate().isAfter(java.time.LocalDate.now()))
+            errors.add("Birth date cannot be in the future.");
+
+        if(!errors.isEmpty())
+            throw new DataValidationException(errors);
+        
+        Actor actor = findActorById(id);
+        if(actorInfo.getName() != null && !actorInfo.getName().isBlank())
+            actor.setName(actorInfo.getName());
+        if(actorInfo.getBirthDate() != null)
+            actor.setBirthDate(actorInfo.getBirthDate());
+        
+        actorRepository.save(actor);
+        return new ActorResponseDTO(actor.getId(),actor.getName(),actor.getBirthDate());
+    }
+
     public ActorDTO getActor(Long id) {
         validateId(id, "Actor");
         Actor actor = findActorById(id);
@@ -73,19 +101,17 @@ public class ActorService {
             actor.getMidias());
     }
 
-    public List<ActorDTO> getAllActors() {
-        List<Actor> actors = actorRepository.findAll();
+    public Page<ActorDTO> getAllActors(Pageable pageable) {
+        Page<Actor> actors = actorRepository.findAll(pageable);
         
         if(actors.isEmpty())
             throw new DataNotFoundException("No actors found in database.");
 
-        return actors.stream()
-            .map(actor -> new ActorDTO(
+        return actors.map(actor -> new ActorDTO(
                 actor.getId(), 
                 actor.getName(), 
                 actor.getBirthDate(), 
-                actor.getMidias()))
-            .collect(Collectors.toList());
+                actor.getMidias()));
     }
 
     public String addMidia(Long actorId, Long midiaId) {
@@ -126,7 +152,7 @@ public class ActorService {
         return convertToMidiaDTO(midiaToRemove);
     }
 
-    public List<MidiaDTO> getAllActorMidias(Long actorId) {
+    public Page<MidiaDTO> getAllActorMidias(Long actorId, Pageable pageable) {
         validateId(actorId, "Actor");
         
         Actor actor = findActorById(actorId);
@@ -135,15 +161,18 @@ public class ActorService {
         if(midias == null || midias.isEmpty())
             throw new DataNotFoundException("No midias found for this actor.");
 
-        return midias.stream()
+        List<MidiaDTO> midiaDTOs = midias.stream()
             .map(this::convertToMidiaDTO)
             .collect(Collectors.toList());
+        
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), midiaDTOs.size());
+        
+        List<MidiaDTO> pageContent = midiaDTOs.subList(start, end);
+        
+        return new PageImpl<>(pageContent, pageable, midiaDTOs.size());
     }
 
-    public ActorResponseDTO update(Long id, ActorUpdateDTO actorInfo) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'update'");
-    }
 
     // Helper methods
     private void validateId(Long id, String entity) {

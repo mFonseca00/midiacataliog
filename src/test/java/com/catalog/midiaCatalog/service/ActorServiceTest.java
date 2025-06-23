@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,16 +129,26 @@ public class ActorServiceTest {
 
     @Test
     void testUpdateValidations(){
-        // Test null id
+        ActorUpdateDTO actorInfo = new ActorUpdateDTO(actor2.getName(), actor2.getBirthDate());
 
-        // Test empty id
+        // Test null id and informations
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> actorService.update(null, null));
+        assertTrue(exception.getErrors().contains("Actor Id must be informed."));
+        assertTrue(exception.getErrors().contains("Actor Informations can't be null."));
 
         // Test id not found
+        when(actorRepository.findById(99L)).thenReturn(Optional.empty());
+        DataNotFoundException notFound = assertThrows(DataNotFoundException.class,
+            () -> actorService.update(99L, actorInfo));
+        assertEquals("Actor not found.", notFound.getMessage());
 
-        // Test all info fields empty
-
-        // Test birthdate future date
-
+        // Test birthdate as future date
+        actorInfo.setBirthDate(LocalDate.now().plusYears(1));
+        when(actorRepository.findById(1L)).thenReturn(Optional.of(actor1));
+        exception = assertThrows(DataValidationException.class,
+            () -> actorService.update(1L, actorInfo));
+        assertTrue(exception.getErrors().contains("Birth date cannot be in the future."));
     }
 
     @Test
@@ -218,29 +229,36 @@ public class ActorServiceTest {
 
     @Test
     void testGetAllActorsSuccess(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Actor> actorPage = new PageImpl<>(Arrays.asList(actor1, actor2), pageable, 2);
         
-        when(actorRepository.findAll()).thenReturn(Arrays.asList(actor1, actor2));
+        when(actorRepository.findAll(pageable)).thenReturn(actorPage);
 
-        List<ActorDTO> found = actorService.getAllActors();
+        Page<ActorDTO> found = actorService.getAllActors(pageable);
+        
         assertNotNull(found);
-        assertEquals(2, found.size());
-        assertEquals(actor1.getName(), found.get(0).getName());
-        assertEquals(actor2.getName(), found.get(1).getName());
-        verify(actorRepository, times(1)).findAll();
-
+        assertEquals(2, found.getContent().size());
+        assertEquals(actor1.getName(), found.getContent().get(0).getName());
+        assertEquals(actor2.getName(), found.getContent().get(1).getName());
+        assertEquals(2, found.getTotalElements());
+        assertEquals(1, found.getTotalPages());
+        verify(actorRepository, times(1)).findAll(pageable);
     }
 
     @Test
     void testGetAllActorsEmptyList() {
-        when(actorRepository.findAll()).thenReturn(new ArrayList<>());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Actor> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        
+        when(actorRepository.findAll(pageable)).thenReturn(emptyPage);
 
         Exception exception = assertThrows(DataNotFoundException.class,
             () -> {
-                actorService.getAllActors();
+                actorService.getAllActors(pageable);
             });
 
         assertEquals("No actors found in database.", exception.getMessage());
-        verify(actorRepository, times(1)).findAll();
+        verify(actorRepository, times(1)).findAll(pageable);
     }
 
     @Test
@@ -378,6 +396,7 @@ public class ActorServiceTest {
 
     @Test
     void testGetAllActorMidiasSuccess() {
+        Pageable pageable = PageRequest.of(0, 10);
         List<Midia> midiaList = new ArrayList<>();
         midiaList.add(midia1);
         midiaList.add(midia2);
@@ -385,23 +404,26 @@ public class ActorServiceTest {
         actor1.setMidias(midiaList);
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
 
-        List<MidiaDTO> found = actorService.getAllActorMidias(actor1.getId());
+        Page<MidiaDTO> found = actorService.getAllActorMidias(actor1.getId(), pageable);
 
         assertNotNull(found);
-        assertEquals(2, found.size());
-        assertEquals(midia1.getTitle(), found.get(0).getTitle());
-        assertEquals(midia2.getTitle(), found.get(1).getTitle());
+        assertEquals(2, found.getContent().size());
+        assertEquals(midia1.getTitle(), found.getContent().get(0).getTitle());
+        assertEquals(midia2.getTitle(), found.getContent().get(1).getTitle());
+        assertEquals(2, found.getTotalElements());
+        assertEquals(1, found.getTotalPages());
         verify(actorRepository, times(1)).findById(actor1.getId());
     }
 
     @Test
     void testGetAllActorMidiasFailActorNotFound(){
+        Pageable pageable = PageRequest.of(0, 10);
         Long actorId = 1L;
         when(actorRepository.findById(actorId)).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(DataNotFoundException.class,
             () -> {
-                actorService.getAllActorMidias(actorId);
+                actorService.getAllActorMidias(actorId, pageable);
             });
 
         assertEquals("Actor not found.", exception.getMessage());
@@ -410,9 +432,10 @@ public class ActorServiceTest {
 
     @Test
     void testGetAllActorMidiasFailActorNullId(){
+        Pageable pageable = PageRequest.of(0, 10);
         Exception exception = assertThrows(DataValidationException.class,
             () -> {
-                actorService.getAllActorMidias(null);
+                actorService.getAllActorMidias(null, pageable);
             });
 
         assertEquals("Actor id must be informed.", exception.getMessage());
@@ -420,11 +443,12 @@ public class ActorServiceTest {
 
     @Test
     void testGetAllActorMidiasFailEmptyList(){
+        Pageable pageable = PageRequest.of(0, 10);
         when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
 
         Exception exception = assertThrows(DataNotFoundException.class,
             () -> {
-                actorService.getAllActorMidias(actor1.getId());
+                actorService.getAllActorMidias(actor1.getId(), pageable);
             });
 
         assertEquals("No midias found for this actor.", exception.getMessage());
@@ -455,6 +479,8 @@ public class ActorServiceTest {
 
     @Test
     void testActorOperationsValidations() {
+        Pageable pageable = PageRequest.of(0, 10);
+        
         // Test get actor validations
         DataValidationException exception = assertThrows(DataValidationException.class,
             () -> actorService.getActor(null));
@@ -467,7 +493,7 @@ public class ActorServiceTest {
 
         // Test get all actor midias validations
         exception = assertThrows(DataValidationException.class,
-            () -> actorService.getAllActorMidias(null));
+            () -> actorService.getAllActorMidias(null, pageable));
         assertEquals("Actor id must be informed.", exception.getMessage());
     }
 
@@ -494,6 +520,8 @@ public class ActorServiceTest {
 
     @Test
     void testSuccessfulOperations() {
+        Pageable pageable = PageRequest.of(0, 10);
+        
         // Test register
         ActorRegistrationDTO validActor = new ActorRegistrationDTO();
         validActor.setName(actor1.getName());
@@ -509,9 +537,10 @@ public class ActorServiceTest {
         assertEquals(actor1.getName(), found.getName());
 
         // Test get all actors
-        when(actorRepository.findAll()).thenReturn(Arrays.asList(actor1, actor2));
-        List<ActorDTO> allActors = actorService.getAllActors();
-        assertEquals(2, allActors.size());
+        Page<Actor> actorPage = new PageImpl<>(Arrays.asList(actor1, actor2), pageable, 2);
+        when(actorRepository.findAll(pageable)).thenReturn(actorPage);
+        Page<ActorDTO> allActors = actorService.getAllActors(pageable);
+        assertEquals(2, allActors.getContent().size());
 
         // Test add midia
         when(midiaRepository.findById(midia1.getId())).thenReturn(Optional.of(midia1));
@@ -527,6 +556,7 @@ public class ActorServiceTest {
 
     @Test
     void testNotFoundScenarios() {
+        Pageable pageable = PageRequest.of(0, 10);
         when(actorRepository.findById(99L)).thenReturn(Optional.empty());
         when(midiaRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -540,13 +570,31 @@ public class ActorServiceTest {
             () -> actorService.addMidia(1L, 99L));
 
         // Test empty lists
-        when(actorRepository.findAll()).thenReturn(new ArrayList<>());
+        Page<Actor> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        when(actorRepository.findAll(pageable)).thenReturn(emptyPage);
         assertThrows(DataNotFoundException.class,
-            () -> actorService.getAllActors());
+            () -> actorService.getAllActors(pageable));
 
         actor1.setMidias(new ArrayList<>());
         assertThrows(DataNotFoundException.class,
-            () -> actorService.getAllActorMidias(1L));
+            () -> actorService.getAllActorMidias(1L, pageable));
     }
 
+    @Test
+    void testGetAllActorMidiasPagination() {
+        Pageable pageable = PageRequest.of(1, 1); // Second page, 1 item per page
+        List<Midia> midiaList = Arrays.asList(midia1, midia2);
+        
+        actor1.setMidias(midiaList);
+        when(actorRepository.findById(actor1.getId())).thenReturn(Optional.of(actor1));
+
+        Page<MidiaDTO> found = actorService.getAllActorMidias(actor1.getId(), pageable);
+
+        assertNotNull(found);
+        assertEquals(1, found.getContent().size());
+        assertEquals(midia2.getTitle(), found.getContent().get(0).getTitle());
+        assertEquals(2, found.getTotalElements());
+        assertEquals(2, found.getTotalPages());
+        assertEquals(1, found.getNumber());
+    }
 }

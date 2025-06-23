@@ -28,8 +28,6 @@ import com.catalog.midiacatalog.model.User;
 import com.catalog.midiacatalog.repository.UserRepository;
 import com.catalog.midiacatalog.service.UserService;
 
-import lombok.Data;
-
 public class UserServiceTest {
 
     @Mock

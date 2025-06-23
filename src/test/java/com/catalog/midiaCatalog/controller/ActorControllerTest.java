@@ -14,6 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -100,13 +104,35 @@ public class ActorControllerTest {
 
     @Test
     void testGetAllActors() throws Exception {
-        List<ActorDTO> actors = Arrays.asList(actorDTO);
-        when(actorService.getAllActors()).thenReturn(actors);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ActorDTO> actorPage = new PageImpl<>(Arrays.asList(actorDTO), pageable, 1);
+        
+        when(actorService.getAllActors(any(Pageable.class))).thenReturn(actorPage);
 
         mockMvc.perform(get("/actor/list"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("John Doe"));
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("John Doe"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void testGetAllActorsWithPagination() throws Exception {
+        Pageable pageable = PageRequest.of(1, 5);
+        Page<ActorDTO> actorPage = new PageImpl<>(Arrays.asList(actorDTO), pageable, 10);
+        
+        when(actorService.getAllActors(any(Pageable.class))).thenReturn(actorPage);
+
+        mockMvc.perform(get("/actor/list?page=1&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.totalElements").value(10))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(1));
     }
 
     @Test
@@ -122,7 +148,7 @@ public class ActorControllerTest {
     void testRemoveMidia() throws Exception {
         when(actorService.removeMidia(1L, 1L)).thenReturn(midiaDTO);
 
-        mockMvc.perform(put("/actor/1/remove-midia/1"))
+        mockMvc.perform(delete("/actor/1/remove-midia/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Test Movie"));
@@ -130,12 +156,48 @@ public class ActorControllerTest {
 
     @Test
     void testGetAllActorMidias() throws Exception {
-        List<MidiaDTO> midias = Arrays.asList(midiaDTO);
-        when(actorService.getAllActorMidias(1L)).thenReturn(midias);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<MidiaDTO> midiaPage = new PageImpl<>(Arrays.asList(midiaDTO), pageable, 1);
+        
+        when(actorService.getAllActorMidias(any(Long.class), any(Pageable.class))).thenReturn(midiaPage);
 
         mockMvc.perform(get("/actor/1/list-midias"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].title").value("Test Movie"));
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Test Movie"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void testGetAllActorMidiasWithPagination() throws Exception {
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<MidiaDTO> midiaPage = new PageImpl<>(Arrays.asList(midiaDTO), pageable, 15);
+        
+        when(actorService.getAllActorMidias(any(Long.class), any(Pageable.class))).thenReturn(midiaPage);
+
+        mockMvc.perform(get("/actor/1/list-midias?page=0&size=5&sort=title,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Test Movie"))
+                .andExpect(jsonPath("$.totalElements").value(15))
+                .andExpect(jsonPath("$.totalPages").value(3))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void testGetAllActorsWithSorting() throws Exception {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ActorDTO> actorPage = new PageImpl<>(Arrays.asList(actorDTO), pageable, 1);
+        
+        when(actorService.getAllActors(any(Pageable.class))).thenReturn(actorPage);
+
+        mockMvc.perform(get("/actor/list?sort=birthDate,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("John Doe"));
     }
 }
