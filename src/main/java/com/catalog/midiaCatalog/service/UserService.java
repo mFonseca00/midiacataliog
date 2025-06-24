@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.catalog.midiacatalog.dto.User.UserLoginDTO;
@@ -178,10 +180,30 @@ public class UserService {
         return new UserResponseDTO(user.getId(), user.getName(), user.getEmail());
     }
 
-    //TODO: getUser
+    public UserResponseDTO getUser(Long id) {
+        if(id == null)
+            throw new DataValidationException("User id must be informed.");
 
-    //TODO: getAllUsers
-    
+        Optional<User> userFound = userRepository.findById(id);
+        if(!userFound.isPresent())
+            throw new DataNotFoundException("User not found.");
+
+        User user = userFound.get();
+        return new UserResponseDTO( user.getId(), user.getName(), user.getEmail());
+    }
+
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+
+        if(users.isEmpty())
+            throw new DataNotFoundException("No users found in database.");
+
+        return users.map(user -> new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail()
+                ));
+    }
     
     // Helper methods
     private String validateEmail(String Email){

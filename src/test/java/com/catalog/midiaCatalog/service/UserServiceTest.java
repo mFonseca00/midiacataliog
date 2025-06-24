@@ -10,6 +10,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +19,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import com.catalog.midiacatalog.dto.Actor.ActorDTO;
 import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
@@ -25,6 +32,7 @@ import com.catalog.midiacatalog.dto.User.UserResponseDTO;
 import com.catalog.midiacatalog.dto.User.UserUpdateDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
+import com.catalog.midiacatalog.model.Actor;
 import com.catalog.midiacatalog.model.User;
 import com.catalog.midiacatalog.repository.UserRepository;
 import com.catalog.midiacatalog.service.UserService;
@@ -360,7 +368,62 @@ public class UserServiceTest {
         verify(userRepository, times(3)).save(any(User.class));
     }
 
-    // TODO: getUser
+    @Test
+    void testGetActorSuccess(){
+        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+
+        UserResponseDTO found = userService.getUser(user1.getId());
+
+        assertNotNull(found);
+        assertEquals(user1.getId(), found.getId());
+        assertEquals(user1.getName(), found.getName());
+        assertEquals(user1.getEmail(), found.getEmail());
+        verify(userRepository, times(1)).findById(user1.getId());
+    }
+
+    @Test
+    void testGetUserValidations(){
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> userService.getUser(null));
+        assertEquals("User id must be informed.", exception.getMessage());
+
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        DataNotFoundException notFound = assertThrows(DataNotFoundException.class,
+            () -> userService.getUser(99L));
+        assertEquals("User not found.", notFound.getMessage());
+    }
     
-    // TODO: getAllUsers
+    @Test
+    void testGetAllUsersSuccess(){
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> actorPage = new PageImpl<>(Arrays.asList(user1, user2), pageable, 2);
+        
+        when(userRepository.findAll(pageable)).thenReturn(actorPage);
+
+        Page<UserResponseDTO> found = userService.getAllUsers(pageable);
+        
+        assertNotNull(found);
+        assertEquals(2, found.getContent().size());
+        assertEquals(user1.getId(), found.getContent().get(0).getId());
+        assertEquals(user2.getId(), found.getContent().get(1).getId());
+        assertEquals(2, found.getTotalElements());
+        assertEquals(1, found.getTotalPages());
+        verify(userRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void testGetAllUsersEmptyList() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
+        
+        when(userRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Exception exception = assertThrows(DataNotFoundException.class,
+            () -> {
+                userService.getAllUsers(pageable);
+            });
+
+        assertEquals("No users found in database.", exception.getMessage());
+        verify(userRepository, times(1)).findAll(pageable);
+    }
 }
