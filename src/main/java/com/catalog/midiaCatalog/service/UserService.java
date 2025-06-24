@@ -11,6 +11,7 @@ import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserResponseDTO;
+import com.catalog.midiacatalog.dto.User.UserUpdateDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
 import com.catalog.midiacatalog.model.User;
@@ -126,9 +127,56 @@ public class UserService {
             throw new DataValidationException("Wrong password or email address. Please try again.");
         
         return true; //TODO: add JWT creation
-    }
+    } 
 
-    //TODO: updateUser
+    public UserResponseDTO update(Long id, UserUpdateDTO userInfo){
+        List<String> errors = new ArrayList<>();
+        String validation = null;
+
+        if(id == null)
+            errors.add("User Id must be informed.");
+        if(userInfo == null)
+            errors.add("User Informations can't be null.");
+        else {
+            if(userInfo.getEmail() != null && !userInfo.getEmail().isBlank())
+            {
+                validation = validateEmail(userInfo.getEmail());
+                if(validation != null)
+                    errors.add(validation);
+                else {
+                    Optional<User> existingUser = userRepository.findByEmail(userInfo.getEmail());
+                    if(existingUser.isPresent() && !existingUser.get().getId().equals(id))
+                        errors.add("Email already registered by another user.");
+                }
+            }
+                
+            if(userInfo.getPassword() != null && !userInfo.getPassword().isBlank())
+            {
+                validation = validatePassword(userInfo.getPassword());
+                if(validation != null)
+                    errors.add(validation);
+            }
+        }
+
+        if(!errors.isEmpty())
+            throw new DataValidationException(errors);
+        
+        Optional<User> userFound = userRepository.findById(id);
+        if(!userFound.isPresent())
+            throw new DataNotFoundException("User not found.");
+
+        User user = userFound.get();
+        if(userInfo.getName() != null && !userInfo.getName().isBlank())
+            user.setName(userInfo.getName());
+        if(userInfo.getEmail() != null && !userInfo.getEmail().isBlank())
+            user.setEmail(userInfo.getEmail());
+        if(userInfo.getPassword() != null && !userInfo.getPassword().isBlank())
+            user.setPassword(userInfo.getPassword());
+
+        userRepository.save(user);
+        
+        return new UserResponseDTO(user.getId(), user.getName(), user.getEmail());
+    }
 
     //TODO: getUser
 

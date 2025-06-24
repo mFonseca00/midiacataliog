@@ -22,6 +22,7 @@ import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserResponseDTO;
+import com.catalog.midiacatalog.dto.User.UserUpdateDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
 import com.catalog.midiacatalog.model.User;
@@ -263,8 +264,103 @@ public class UserServiceTest {
         verify(userRepository, times(1)).findByEmail(any(String.class));
     }
 
-    // getUser
-    
+    @Test
+    void testUpdateSuccess(){
+        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
 
-    // getAllUsers
+        UserUpdateDTO userInfo = new UserUpdateDTO("Joaquim Silva", null, "Newpassword123@");
+
+        UserResponseDTO updated = userService.update(user1.getId(), userInfo);
+
+        assertNotNull(updated);
+        assertEquals(user1.getId(), updated.getId());
+        assertEquals("Joaquim Silva", updated.getName());
+        assertEquals(user1.getEmail(), updated.getEmail()); // Email not changed
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void testUpdateValidations(){
+        // Test null id and informations
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> userService.update(null, null));
+        assertTrue(exception.getErrors().contains("User Id must be informed."));
+        assertTrue(exception.getErrors().contains("User Informations can't be null."));
+
+        // Test invalid formats
+        exception = assertThrows(DataValidationException.class,
+            () -> userService.update(1L, new UserUpdateDTO(
+                null, // not update name
+                "invalid-email",  // Invalid email
+                "weak" // Weak password
+            )));
+        assertTrue(exception.getErrors().contains("Invalid email format."));
+        assertTrue(exception.getErrors().contains("Password must contain at least 8 characters, one uppercase letter, one number and one special character."));
+
+        // Test id not found
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        DataNotFoundException notFound = assertThrows(DataNotFoundException.class,
+            () -> userService.update(99L, new UserUpdateDTO(
+                "Test",
+                "test@email.com"
+                ,"TestPass123@"
+                )));
+        assertEquals("User not found.", notFound.getMessage());
+        
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testUpdateDuplicateEmail() {
+        UserUpdateDTO userInfo = new UserUpdateDTO(user1.getName(), user2.getEmail(), user1.getPassword());
+        
+        // Mock: user2 email
+        when(userRepository.findByEmail(user2.getEmail())).thenReturn(Optional.of(user2));
+        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+
+        DataValidationException exception = assertThrows(DataValidationException.class,
+            () -> userService.update(user1.getId(), userInfo));
+        assertTrue(exception.getErrors().contains("Email already registered by another user."));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void testUpdateSameUserEmail() {
+        UserUpdateDTO userInfo = new UserUpdateDTO("New name", user1.getEmail(), "Newpassword123@");
+        
+        when(userRepository.findByEmail(user1.getEmail())).thenReturn(Optional.of(user1));
+        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+
+        UserResponseDTO updated = userService.update(user1.getId(), userInfo);
+
+        assertNotNull(updated);
+        assertEquals(user1.getId(), updated.getId());
+        assertEquals("New name", updated.getName());
+        assertEquals(user1.getEmail(), updated.getEmail());
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void testUpdatePartialFields() {
+        when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+
+        UserUpdateDTO userInfo1 = new UserUpdateDTO("New name", null, null);
+        UserResponseDTO updated1 = userService.update(user1.getId(), userInfo1);
+        assertEquals("New name", updated1.getName());
+
+        UserUpdateDTO userInfo2 = new UserUpdateDTO(null, "newemail@test.com", null);
+        when(userRepository.findByEmail("newemail@test.com")).thenReturn(Optional.empty());
+        UserResponseDTO updated2 = userService.update(user1.getId(), userInfo2);
+        assertEquals("newemail@test.com", updated2.getEmail());
+
+        UserUpdateDTO userInfo3 = new UserUpdateDTO(null, null, "Newpassword123@");
+        UserResponseDTO updated3 = userService.update(user1.getId(), userInfo3);
+        assertNotNull(updated3);
+
+        verify(userRepository, times(3)).save(any(User.class));
+    }
+
+    // TODO: getUser
+    
+    // TODO: getAllUsers
 }
