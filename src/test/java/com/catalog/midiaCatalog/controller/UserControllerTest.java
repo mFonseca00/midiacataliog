@@ -11,12 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.catalog.midiacatalog.controller.UserController;
-import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
 import com.catalog.midiacatalog.dto.User.UserResponseDTO;
 import com.catalog.midiacatalog.exception.DataValidationException;
@@ -30,7 +29,7 @@ public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
     private ObjectMapper objectMapper;
@@ -81,7 +80,7 @@ public class UserControllerTest {
                 .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors").isArray()) // TODO: Verificar erro
                 .andExpect(jsonPath("$.errors[0]").value("User name must be informed."))
                 .andExpect(jsonPath("$.errors[1]").value("Invalid email format."))
                 .andExpect(jsonPath("$.errors[2]").value("Password must contain at least 8 characters, one uppercase letter, one number and one special character."));
