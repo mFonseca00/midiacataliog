@@ -84,7 +84,7 @@ public class UserService {
         user.setPassword(pwSetDTO.getPassword());
         userRepository.save(user);
 
-        return "Passowrd rested successfuly";
+        return "Password reseted successfuly";
     }
           
 

@@ -137,7 +137,7 @@ public class UserServiceTest {
         String response = userService.setPassword(dto);
 
         assertEquals(user1.getPassword(), dto.getPassword());
-        assertEquals(response, "Passowrd rested successfuly");
+        assertEquals(response, "Password reseted successfuly");
         verify(userRepository, times(1)).save(any(User.class));
     }
 
