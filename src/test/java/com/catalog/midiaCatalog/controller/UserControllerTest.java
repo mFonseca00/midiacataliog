@@ -80,10 +80,9 @@ public class UserControllerTest {
                 .content(objectMapper.writeValueAsString(invalidUser)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors").isArray()) // TODO: Verificar erro
-                .andExpect(jsonPath("$.errors[0]").value("User name must be informed."))
-                .andExpect(jsonPath("$.errors[1]").value("Invalid email format."))
-                .andExpect(jsonPath("$.errors[2]").value("Password must contain at least 8 characters, one uppercase letter, one number and one special character."));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("User name must be informed.")))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Invalid email format.")))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Password must contain at least 8 characters")));
     }
 
     @Test

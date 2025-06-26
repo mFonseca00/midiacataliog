@@ -24,7 +24,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.catalog.midiacatalog.dto.Actor.ActorDTO;
 import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
@@ -32,7 +31,6 @@ import com.catalog.midiacatalog.dto.User.UserResponseDTO;
 import com.catalog.midiacatalog.dto.User.UserUpdateDTO;
 import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
-import com.catalog.midiacatalog.model.Actor;
 import com.catalog.midiacatalog.model.User;
 import com.catalog.midiacatalog.repository.UserRepository;
 import com.catalog.midiacatalog.service.UserService;
