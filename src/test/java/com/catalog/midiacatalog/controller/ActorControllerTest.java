@@ -1,4 +1,4 @@
-package com.catalog.midiaCatalog.controller;
+package com.catalog.midiacatalog.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

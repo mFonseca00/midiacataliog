@@ -1,4 +1,4 @@
-package com.catalog.midiaCatalog;
+package com.catalog.midiacatalog;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
