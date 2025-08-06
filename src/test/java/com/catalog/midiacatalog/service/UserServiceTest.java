@@ -33,7 +33,6 @@ import com.catalog.midiacatalog.exception.DataNotFoundException;
 import com.catalog.midiacatalog.exception.DataValidationException;
 import com.catalog.midiacatalog.model.User;
 import com.catalog.midiacatalog.repository.UserRepository;
-import com.catalog.midiacatalog.service.UserService;
 
 public class UserServiceTest {
 

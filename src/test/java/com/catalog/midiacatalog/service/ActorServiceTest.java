@@ -29,7 +29,6 @@ import com.catalog.midiacatalog.model.Midia;
 import com.catalog.midiacatalog.model.enums.Midiatype;
 import com.catalog.midiacatalog.repository.ActorRepository;
 import com.catalog.midiacatalog.repository.MidiaRepository;
-import com.catalog.midiacatalog.service.ActorService;
 
 public class ActorServiceTest {
     @Mock
