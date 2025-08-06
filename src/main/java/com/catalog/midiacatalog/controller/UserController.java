@@ -61,13 +61,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/getUser/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id){
         UserResponseDTO response = userService.getUser(id);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/getAllUsers")
+    @GetMapping("/list")
     public ResponseEntity<Page<UserResponseDTO>> getAllUsers(Pageable pageable){
         Page<UserResponseDTO> response = userService.getAllUsers(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(response);

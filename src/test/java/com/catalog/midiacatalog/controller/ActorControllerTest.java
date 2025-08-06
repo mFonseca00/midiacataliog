@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.catalog.midiacatalog.controller.ActorController;
 import com.catalog.midiacatalog.dto.Actor.ActorDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorRegistrationDTO;
 import com.catalog.midiacatalog.dto.Actor.ActorResponseDTO;

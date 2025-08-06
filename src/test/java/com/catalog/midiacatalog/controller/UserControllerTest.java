@@ -23,7 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.catalog.midiacatalog.controller.UserController;
 import com.catalog.midiacatalog.dto.User.UserLoginDTO;
 import com.catalog.midiacatalog.dto.User.UserPwSetDTO;
 import com.catalog.midiacatalog.dto.User.UserRegistrationDTO;
@@ -422,7 +421,7 @@ public class UserControllerTest {
     void testGetUserSuccess() throws Exception {
         when(userService.getUser(any(Long.class))).thenReturn(userResponseDTO);
 
-        mockMvc.perform(get("/user/getUser/{id}", 1L)
+        mockMvc.perform(get("/user/{id}", 1L)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -433,7 +432,7 @@ public class UserControllerTest {
 
     @Test
     void testGetUserWithNonNumericId() throws Exception {
-        mockMvc.perform(get("/user/getUser/{id}", "abc")
+        mockMvc.perform(get("/user/{id}", "abc")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
         }
@@ -443,7 +442,7 @@ public class UserControllerTest {
         when(userService.getUser(any(Long.class)))
                 .thenThrow(new DataNotFoundException("No user found for this ID."));
 
-        mockMvc.perform(get("/user/getUser/{id}", 2L)
+        mockMvc.perform(get("/user/{id}", 2L)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -452,7 +451,7 @@ public class UserControllerTest {
 
     @Test
     void testGetUserWithNullId() throws Exception {
-        mockMvc.perform(get("/user/getUser/{id}", "")
+        mockMvc.perform(get("/user/{id}", "")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -461,7 +460,7 @@ public class UserControllerTest {
     void testGetAllUsersSuccess() throws Exception {
         when(userService.getAllUsers(any(Pageable.class))).thenReturn(userPage);
 
-        mockMvc.perform(get("/user/getAllUsers")
+        mockMvc.perform(get("/user/list")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -481,7 +480,7 @@ public class UserControllerTest {
     void testGetAllUsersWithPagination() throws Exception {
         when(userService.getAllUsers(any(Pageable.class))).thenReturn(userPage);
 
-        mockMvc.perform(get("/user/getAllUsers")
+        mockMvc.perform(get("/user/list")
                 .param("page", "0")
                 .param("size", "5")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -496,7 +495,7 @@ public class UserControllerTest {
         when(userService.getAllUsers(any(Pageable.class)))
                 .thenThrow(new DataNotFoundException("No users found in database."));
 
-        mockMvc.perform(get("/user/getAllUsers")
+        mockMvc.perform(get("/user/list")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
