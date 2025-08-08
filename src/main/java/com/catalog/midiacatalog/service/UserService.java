@@ -86,7 +86,6 @@ public class UserService {
 
         return "Password reseted successfuly";
     }
-          
 
     public UserResponseDTO remove(Long id) {
         if(id == null)
@@ -100,7 +99,7 @@ public class UserService {
         userRepository.deleteById(id);
         return new UserResponseDTO(user.getId(),user.getName(),user.getEmail());
     }
-       
+
     public boolean login(UserLoginDTO userLogin) {
         if(userLogin == null)
             throw new DataValidationException("User credentials must be informed.");
