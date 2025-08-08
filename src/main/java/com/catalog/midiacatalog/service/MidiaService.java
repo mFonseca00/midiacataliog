@@ -68,7 +68,7 @@ public class MidiaService {
                                 newMidia.getDirector(), newMidia.getSynopsis(), newMidia.getGenre(),
                                 newMidia.getPoseterImageUrl(), actors);
         
-        midiaRepository.save(midia);
+        midia = midiaRepository.save(midia);
 
         return new MidiaResponseDTO(midia.getId(), midia.getTitle(), midia.getType());
     }
@@ -120,23 +120,27 @@ public class MidiaService {
             midia.setPoseterImageUrl(midiaInfo.getPoseterImageUrl());
         
         if (midiaInfo.getActorIds() != null) {
-            List<Actor> actors = new ArrayList<>();
-            List<Long> notFoundActorIds = new ArrayList<>();
-            
-            for (Long actorId : midiaInfo.getActorIds()) {
-                Optional<Actor> actorOpt = actorRepository.findById(actorId);
-                if (actorOpt.isPresent()) {
-                    actors.add(actorOpt.get());
-                } else {
-                    notFoundActorIds.add(actorId);
+            if (midiaInfo.getActorIds().isEmpty()) {
+                midia.setActors(new ArrayList<>());
+            } else {
+                List<Actor> actors = new ArrayList<>();
+                List<Long> notFoundActorIds = new ArrayList<>();
+                
+                for (Long actorId : midiaInfo.getActorIds()) {
+                    Optional<Actor> actorOpt = actorRepository.findById(actorId);
+                    if (actorOpt.isPresent()) {
+                        actors.add(actorOpt.get());
+                    } else {
+                        notFoundActorIds.add(actorId);
+                    }
                 }
+                
+                if (!notFoundActorIds.isEmpty()) {
+                    throw new DataNotFoundException("The following actor IDs were not found: " + notFoundActorIds);
+                }
+                
+                midia.setActors(actors);
             }
-            
-            if (!notFoundActorIds.isEmpty()) {
-                throw new DataNotFoundException("The following actor IDs were not found: " + notFoundActorIds);
-            }
-            
-            midia.setActors(actors);
         }
         
         midiaRepository.save(midia);
